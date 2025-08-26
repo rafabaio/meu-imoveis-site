@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Detalhe do Imóvel</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Detalhe do Imóvel</h1>
+    <div class="actions">
+      <a href="index.html"><button>← Voltar ao mapa</button></a>
+    </div>
+  </header>
+
+  <main class="detalhe">
+    <section class="hero">
+      <div>
+        <img id="d-img" class="main-img" alt="Imagem principal" />
+        <div id="d-thumbs" class="thumb-row"></div>
+      </div>
+      <div class="hero-info">
+        <h2 id="d-titulo"></h2>
+        <div id="d-meta"></div>
+        <div id="d-construtora"></div>
+        <div id="d-sol"></div>
+      </div>
+    </section>
+
+    <section class="info">
+      <div><strong>Área:</strong> <span id="d-area">–</span></div>
+      <div><strong>Vagas:</strong> <span id="d-vagas">–</span></div>
+      <div><strong>Suítes:</strong> <span id="d-suites">–</span></div>
+      <div><strong>Tipo:</strong> <span id="d-tipo">–</span></div>
+    </section>
+
+    <section class="descricao">
+      <h3>Descrição</h3>
+      <p id="d-desc"></p>
+    </section>
+
+    <section class="galeria">
+      <h3>Galeria</h3>
+      <div id="d-galeria" class="grid-galeria"></div>
+    </section>
+  </main>
+
+  <script src="detalhe.js"></script>
+</body>
+</html>

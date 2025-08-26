@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Imobiliária MVP (básico)</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;color:#111}
+    header,footer{padding:10px 16px;background:#f7f7f7;border-bottom:1px solid #eee}
+    footer{border-top:1px solid #eee;border-bottom:0}
+    header h1{margin:0;font-size:18px}
+    header .actions{display:flex;gap:8px;margin-top:8px}
+    button{padding:8px 12px;border:1px solid #ddd;background:#fff;border-radius:6px;cursor:pointer}
+    .layout{display:grid;grid-template-columns:380px 1fr;height:calc(100vh - 150px)}
+    .lista{list-style:none;margin:0;padding:0;overflow:auto;border-right:1px solid #eee}
+    .card{display:grid;grid-template-columns:110px 1fr;gap:8px;padding:10px;border-bottom:1px solid #f0f0f0}
+    .card img{width:110px;height:80px;object-fit:cover;border-radius:6px}
+    .card h3{margin:0;font-size:15px}
+    .meta{color:#555;font-size:12px;margin-top:4px}
+    .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+    .map{width:100%;height:100%}
+    dialog{border:1px solid #ddd;border-radius:8px;padding:16px;max-width:720px;width:95%}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .grid .full{grid-column:1 / -1}
+    input,textarea{width:100%;padding:8px;border:1px solid #ddd;border-radius:6px}
+    @media (max-width:1000px){.layout{grid-template-columns:1fr}.map{height:60vh}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Imobiliária MVP</h1>
+    <div class="actions">
+      <button id="btn-cadastrar">Cadastrar</button>
+      <button id="btn-exportar">Exportar JSON</button>
+      <button id="btn-limpar-local">Limpar dados locais</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside>
+      <ul id="lista" class="lista"></ul>
+    </aside>
+    <section>
+      <div id="map" class="map"></div>
+    </section>
+  </main>
+
+  <footer><small>Protótipo simples • OSM tiles</small></footer>
+
+  <!-- Modal (editar/criar) -->
+  <dialog id="dlg-cadastro">
+    <form id="form-cadastro">
+      <h3 id="dlg-titulo">Novo empreendimento</h3>
+      <input type="hidden" id="c-id" />
+      <div class="grid">
+        <label>Título <input id="c-titulo" required></label>
+        <label>Preço (R$) <input id="c-preco" type="number"></label>
+        <label>Quartos <input id="c-quartos" type="number" min="0"></label>
+        <label>Suítes <input id="c-suites" type="number" min="0" value="0"></label>
+        <label>Tipo <input id="c-tipo" placeholder="Apartamento"></label>
+        <label>Construtora <input id="c-construtora" placeholder="ex.: VLP/MRV"></label>
+        <label>Latitude <input id="c-lat" type="number" step="any" required></label>
+        <label>Longitude <input id="c-lng" type="number" step="any" required></label>
+        <label>Vagas <input id="c-vagas" type="number" min="0" value="1"></label>
+        <label>Área (m²) <input id="c-area" type="number" step="0.01"></label>
+        <label class="full">Imagem principal (URL) <input id="c-imagem" placeholder="https://..."></label>
+        <label class="full">Descrição <textarea id="c-desc" rows="3"></textarea></label>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button type="button" id="c-cancelar">Cancelar</button>
+        <button type="button" id="c-salvar">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
