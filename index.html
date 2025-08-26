@@ -3,78 +3,143 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Imobiliária MVP (básico)</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <title>Meus Imóveis</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <style>
-    *{box-sizing:border-box} body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;color:#111}
-    header,footer{padding:10px 16px;background:#f7f7f7;border-bottom:1px solid #eee}
-    footer{border-top:1px solid #eee;border-bottom:0}
-    header h1{margin:0;font-size:18px}
-    header .actions{display:flex;gap:8px;margin-top:8px}
-    button{padding:8px 12px;border:1px solid #ddd;background:#fff;border-radius:6px;cursor:pointer}
-    .layout{display:grid;grid-template-columns:380px 1fr;height:calc(100vh - 150px)}
-    .lista{list-style:none;margin:0;padding:0;overflow:auto;border-right:1px solid #eee}
-    .card{display:grid;grid-template-columns:110px 1fr;gap:8px;padding:10px;border-bottom:1px solid #f0f0f0}
-    .card img{width:110px;height:80px;object-fit:cover;border-radius:6px}
-    .card h3{margin:0;font-size:15px}
-    .meta{color:#555;font-size:12px;margin-top:4px}
-    .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-    .map{width:100%;height:100%}
-    dialog{border:1px solid #ddd;border-radius:8px;padding:16px;max-width:720px;width:95%}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .grid .full{grid-column:1 / -1}
-    input,textarea{width:100%;padding:8px;border:1px solid #ddd;border-radius:6px}
-    @media (max-width:1000px){.layout{grid-template-columns:1fr}.map{height:60vh}}
+    body { font-family: system-ui, Arial; margin:0; }
+    header { padding:12px 16px; border-bottom:1px solid #eee; }
+    .wrap { display:grid; grid-template-columns: 420px 1fr; gap:8px; height: calc(100vh - 56px); }
+    #lista { overflow:auto; padding:10px; }
+    .card { border:1px solid #e5e7eb; border-radius:10px; margin:8px 0; overflow:hidden; }
+    .card img { width:100%; height:160px; object-fit:cover; display:block; }
+    .card .b { padding:10px; }
+    .tags { font-size:12px; color:#555; }
+    #map { height:100%; width:100%; }
+    .filtros { display:flex; gap:8px; padding:8px; position:sticky; top:0; background:#fff; z-index:1; border-bottom:1px solid #eee;}
+    input, select { padding:6px 8px; border:1px solid #ddd; border-radius:8px; }
+    .price { font-weight:700; }
   </style>
 </head>
 <body>
   <header>
-    <h1>Imobiliária MVP</h1>
-    <div class="actions">
-      <button id="btn-cadastrar">Cadastrar</button>
-      <button id="btn-exportar">Exportar JSON</button>
-      <button id="btn-limpar-local">Limpar dados locais</button>
-    </div>
+    <strong>Meus Imóveis</strong> — catálogo privado
   </header>
 
-  <main class="layout">
-    <aside>
-      <ul id="lista" class="lista"></ul>
+  <div class="wrap">
+    <aside id="lista">
+      <div class="filtros">
+        <input id="q" placeholder="Buscar (bairro, título...)" />
+        <select id="quartos">
+          <option value="">Quartos</option>
+          <option>1</option><option>2</option><option>3</option><option>4+</option>
+        </select>
+        <input id="precoMax" type="number" placeholder="Preço máx (R$)" />
+        <button id="filtrar">Filtrar</button>
+        <button id="limpar">Limpar</button>
+      </div>
+      <div id="cards"></div>
     </aside>
-    <section>
-      <div id="map" class="map"></div>
-    </section>
-  </main>
 
-  <footer><small>Protótipo simples • OSM tiles</small></footer>
+    <div id="map"></div>
+  </div>
 
-  <!-- Modal (editar/criar) -->
-  <dialog id="dlg-cadastro">
-    <form id="form-cadastro">
-      <h3 id="dlg-titulo">Novo empreendimento</h3>
-      <input type="hidden" id="c-id" />
-      <div class="grid">
-        <label>Título <input id="c-titulo" required></label>
-        <label>Preço (R$) <input id="c-preco" type="number"></label>
-        <label>Quartos <input id="c-quartos" type="number" min="0"></label>
-        <label>Suítes <input id="c-suites" type="number" min="0" value="0"></label>
-        <label>Tipo <input id="c-tipo" placeholder="Apartamento"></label>
-        <label>Construtora <input id="c-construtora" placeholder="ex.: VLP/MRV"></label>
-        <label>Latitude <input id="c-lat" type="number" step="any" required></label>
-        <label>Longitude <input id="c-lng" type="number" step="any" required></label>
-        <label>Vagas <input id="c-vagas" type="number" min="0" value="1"></label>
-        <label>Área (m²) <input id="c-area" type="number" step="0.01"></label>
-        <label class="full">Imagem principal (URL) <input id="c-imagem" placeholder="https://..."></label>
-        <label class="full">Descrição <textarea id="c-desc" rows="3"></textarea></label>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <button type="button" id="c-cancelar">Cancelar</button>
-        <button type="button" id="c-salvar">Salvar</button>
-      </div>
-    </form>
-  </dialog>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Estado
+    let dados = [], marcadores = [], mapa, camada;
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="app.js"></script>
+    // Helpers
+    const brl = n => n.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+
+    // Carrega dados
+    fetch('data/imoveis.json').then(r=>r.json()).then(json=>{
+      dados = json;
+      init();
+    });
+
+    function init() {
+      // Mapa
+      mapa = L.map('map');
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(mapa);
+
+      render(dados);
+      fitBoundsToData(dados);
+      document.getElementById('filtrar').onclick = aplicarFiltros;
+      document.getElementById('limpar').onclick = ()=>{
+        document.getElementById('q').value='';
+        document.getElementById('quartos').value='';
+        document.getElementById('precoMax').value='';
+        aplicarFiltros();
+      }
+    }
+
+    function aplicarFiltros(){
+      const q = document.getElementById('q').value.trim().toLowerCase();
+      const quartos = document.getElementById('quartos').value;
+      const precoMax = Number(document.getElementById('precoMax').value || Infinity);
+
+      const filtrados = dados.filter(d=>{
+        const texto = (d.titulo+' '+d.bairro+' '+d.empreendimento).toLowerCase();
+        const okTexto = !q || texto.includes(q);
+        const qts = d.quartos || 0;
+        const okQuartos = !quartos || (quartos==='4+' ? qts>=4 : qts==Number(quartos));
+        const okPreco = (d.preco||0) <= precoMax;
+        return okTexto && okQuartos && okPreco;
+      });
+
+      render(filtrados);
+      fitBoundsToData(filtrados);
+    }
+
+    function render(lista){
+      // limpa camada
+      if(camada) { mapa.removeLayer(camada); }
+      marcadores = lista.filter(d=>d.lat && d.lng).map(d=>{
+        const m = L.marker([d.lat, d.lng]).bindPopup(`<b>${d.titulo}</b><br>${brl(d.preco)}<br>${d.bairro}`);
+        m.on('click', ()=> scrollToCard(d.id));
+        return m;
+      });
+      camada = L.layerGroup(marcadores).addTo(mapa);
+
+      // cards
+      const el = document.getElementById('cards');
+      el.innerHTML = '';
+      for(const d of lista){
+        const foto = (d.fotos&&d.fotos[0]) || 'https://placehold.co/600x400?text=sem+foto';
+        const div = document.createElement('div');
+        div.className='card';
+        div.id = 'card-'+d.id;
+        div.innerHTML = `
+          <img src="${foto}" alt="${d.titulo}">
+          <div class="b">
+            <div class="price">${brl(d.preco||0)}</div>
+            <div><strong>${d.titulo}</strong></div>
+            <div class="tags">${d.quartos||0}q • ${d.banheiros||0}b • ${d.vagas||0}v • ${d.area||0} m²</div>
+            <div>${d.bairro}, ${d.cidade} - ${d.uf}</div>
+            <div style="margin-top:6px;">
+              <a href="${d.linkLead||'#'}" target="_blank">Tenho interesse</a>
+            </div>
+          </div>`;
+        el.appendChild(div);
+      }
+    }
+
+    function fitBoundsToData(lista){
+      const pts = lista.filter(d=>d.lat && d.lng).map(d=>[d.lat, d.lng]);
+      if(pts.length){
+        const bounds = L.latLngBounds(pts);
+        mapa.fitBounds(bounds.pad(0.2));
+      } else {
+        mapa.setView([-15.78,-47.93], 4); // Brasil
+      }
+    }
+
+    function scrollToCard(id){
+      const c = document.getElementById('card-'+id);
+      if(c){ c.scrollIntoView({behavior:'smooth', block:'start'}); }
+    }
+  </script>
 </body>
 </html>
